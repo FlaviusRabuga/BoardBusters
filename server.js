@@ -3,44 +3,42 @@ const express = require('express');
 const oracledb = require('oracledb');
 const env = require('dotenv').config();
 
-async function runApp() {
-    let connection;
+const sql = require('mssql');
+
+const config = {
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    server: 'boardbusters.database.windows.net', // better stored in an app setting such as process.env.DB_SERVER
+    port: 1433, // optional, defaults to 1433, better stored in an app setting such as process.env.DB_PORT
+    database: 'Database-IP', // better stored in an app setting such as process.env.DB_NAME
+    authentication: {
+        type: 'default'
+    },
+    options: {
+        encrypt: true
+    }
+};
+
+console.log("Starting...");
+connectAndQuery();
+
+async function connectAndQuery() {
     try {
-        connection = await oracledb.getConnection({
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            connectString: process.env.DB_CONNECTIONSTRING
-        });
-        console.log("Successfully connected to Oracle Database");
+        var poolConnection = await sql.connect(config);
 
-        // Create a table
-        await connection.execute(`begin execute immediate 'drop table todoitem'; exception when others then if sqlcode <> -942 then raise; end if; end;`);
-        await connection.execute(`create table todoitem ( id number generated always as identity, description varchar2(4000), creation_ts timestamp with time zone default current_timestamp, done number(1,0), primary key (id))`);
+        console.log("Reading rows from the Table...");
+        var resultSet = await poolConnection.request().query(`SELECT * FROM TASKS;`);
 
+        console.log(`${resultSet.recordset.length} rows returned.`);
 
-        // Now query the rows back
-        result = await connection.execute(sql);
-        const rs = result.resultSet; let row;
-        while ((row = await rs.getRow())) {
-            if (row.DONE)
-                console.log(row.DESCRIPTION, "is done");
-            else
-                console.log(row.DESCRIPTION, "is NOT done");
-        }
-        await rs.close();
+        console.log(resultSet.recordset);
+
+        // close connection only when we're certain application is finished
+        poolConnection.close();
     } catch (err) {
-        console.error(err);
-    } finally {
-        if (connection) {
-            try {
-                await connection.close();
-            } catch (err) {
-                console.error(err);
-            }
-        }
+        console.error(err.message);
     }
 }
-runApp();
 
 const app = express();
 
