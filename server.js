@@ -69,18 +69,16 @@ app.post('/api/createBoard', async (req, res) => {
     const boardName = req.body.boardName;
     const boardDescription = req.body.boardDescription;
     const creator = req.body.creator;
+    const boardsUsers = req.body.boardsUsers;
 
     console.log(boardName);
     console.log(boardDescription);
     console.log(creator);
+    console.log(boardsUsers);
 
-    const result = await utils.createBoard(boardName, boardDescription, creator);
-    if (result) {
-        res.send("Board created successfully");
-    }
-    else {
-        res.send("Error creating board");
-    }
+    const result = await utils.createBoard(boardName, boardDescription, creator, boardsUsers);
+    
+    res.send(result);
 
 });
 
@@ -102,6 +100,13 @@ app.post('/api/getTasks', async (req, res) => {
     console.log(boardId);
 
     const tasks = await utils.getTasks(boardId);
+    res.send(tasks);
+    
+    });
+
+app.post('/api/getUsers', async (req, res) => {
+    
+    const tasks = await utils.getUsers();
     res.send(tasks);
     
     });

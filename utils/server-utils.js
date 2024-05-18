@@ -107,7 +107,7 @@ module.exports = {
         }
     },
 
-    createBoard: async function (boardName, boardDescription, creator) {
+    createBoard: async function (boardName, boardDescription, creator, boardsUsers) {
         try {
             var poolConnection = await sql.connect(config);
 
@@ -115,21 +115,41 @@ module.exports = {
             var resultSet = await poolConnection.request().query(`SELECT * FROM BOARDS WHERE NAME = '${boardName}';`);
             if (resultSet.recordset.length > 0) {
                 console.log("Board already exists");
-                return false;
+                return {
+                    success: false,
+                    message: "Board already exists"
+                }
             }
 
             // insert new board
             await poolConnection.request().query(`INSERT INTO BOARDS (NAME, DESCRIPTION, CREATOR) VALUES 
                                                 ('${boardName}', '${boardDescription}', '${creator}');`);
+
+            // get board id
+            var resultSet = await poolConnection.request().query(`SELECT BOARD_ID FROM BOARDS WHERE NAME = '${boardName}';`);
+            const boardId = resultSet.recordset[0].BOARD_ID;
+
+            // insert creator and board users into user_to_board_mapping
+            await poolConnection.request().query(`INSERT INTO USER_TO_BOARD_MAPPING (ID_USER, ID_BOARD) VALUES
+                                                (${creator}, ${boardId});`);
+
+            for (let i = 0; i < boardsUsers.length; i++) {
+                await poolConnection.request().query(`INSERT INTO USER_TO_BOARD_MAPPING (ID_USER, ID_BOARD) VALUES
+                                                (${boardsUsers[i]}, ${boardId});`);
+            }
+
             
-            console.log("Board created successfully");
 
             poolConnection.close();
         } catch (err) {
             console.error(err.message);
         }
 
-        return true;
+        console.log("Board created successfully");
+        return {
+            success: true,
+            message: "Board created successfully"
+        }
     },
 
     getBoards: async function (userId) {
@@ -219,6 +239,34 @@ module.exports = {
             success: true,
             message: "Tasks retrieved successfully",
             tasks: resultSet.recordset
+        }
+    },
+
+    getUsers: async function () {
+        try {
+            var poolConnection = await sql.connect(config);
+
+            var resultSet = await poolConnection.request().query(`SELECT USER_ID, NAME FROM USERS;`);
+
+            console.log(`${resultSet.recordset.length} rows returned.`);
+
+            console.log(resultSet.recordset);
+
+            poolConnection.close();
+
+        } catch (err) {
+            console.error(err.message);
+            return {
+                success: false,
+                message: "Error getting users",
+                users : []
+            }
+        }
+
+        return {
+            success: true,
+            message: "Users retrieved successfully",
+            users: resultSet.recordset
         }
     },
 
