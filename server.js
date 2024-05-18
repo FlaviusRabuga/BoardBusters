@@ -112,6 +112,29 @@ app.post('/api/getUsers', async (req, res) => {
     });
 
 
+app.post('/api/createTask', async (req, res) => {
+    const title = req.body.title;
+    const description = req.body.description;
+    const deadline = req.body.deadline;
+    const assignedUser = req.body.assignedUser;
+    const boardId = req.body.boardId;
+    const creator = req.body.creator;
+
+    console.log(title);
+    console.log(description);
+    console.log(deadline);
+    console.log(assignedUser);
+    console.log(boardId);
+    console.log(creator);
+
+    const result = await utils.createTask(title, creator, description, assignedUser, boardId, deadline);
+
+    
+    res.send(result);
+
+});
+
+
     
     
 

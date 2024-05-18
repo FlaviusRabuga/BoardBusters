@@ -143,6 +143,10 @@ module.exports = {
             poolConnection.close();
         } catch (err) {
             console.error(err.message);
+            return {
+                success: false,
+                message: "Error creating board"
+            }
         }
 
         console.log("Board created successfully");
@@ -267,6 +271,47 @@ module.exports = {
             success: true,
             message: "Users retrieved successfully",
             users: resultSet.recordset
+        }
+    },
+
+    createTask: async function (title, creator, description, assignee, boardId, deadline) {
+        try {
+            var poolConnection = await sql.connect(config);
+
+            // check if task already exists
+            var resultSet = await poolConnection.request().query(`SELECT * FROM TASKS WHERE TITLE = '${title}';`);
+            if (resultSet.recordset.length > 0) {
+                console.log("Task already exists");
+                return {
+                    success: false,
+                    message: "Task already exists"
+                }
+            }
+
+            // insert new task
+
+            insert_query = `INSERT INTO TASKS (TITLE, DESCRIPTION, CREATOR, ASSIGNEE,
+                PARENT_BOARD, DEADLINE, STATUS, CREATION_DATE) VALUES
+            ('${title}', '${description}', ${creator}, ${assignee}, ${boardId}, '${deadline}',
+            'TODO', GETDATE());`
+
+            console.log(insert_query);
+            
+            await poolConnection.request().query(insert_query);
+
+            poolConnection.close();
+        } catch (err) {
+            console.error(err.message);
+            return {
+                success: false,
+                message: "Error creating task"
+            }
+        }
+
+        console.log("Task created successfully");
+        return {
+            success: true,
+            message: "Task created successfully"
         }
     },
 
