@@ -95,6 +95,17 @@ app.post('/api/getBoards', async (req, res) => {
 
 });
 
+app.post('/api/getTasks', async (req, res) => {
+        
+    const boardId = req.body.boardId;
+
+    console.log(boardId);
+
+    const tasks = await utils.getTasks(boardId);
+    res.send(tasks);
+    
+    });
+
 
     
     

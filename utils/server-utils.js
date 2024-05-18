@@ -182,6 +182,44 @@ module.exports = {
             message: "Boards retrieved successfully",
             boards: resultSet.recordset
         }
-    }
+    },
+
+    getTasks: async function (boardId) {
+
+        if (boardId === undefined || boardId <= 0) {
+            console.log("Invalid board id");
+            return {
+                success: false,
+                message: "Invalid board id",
+                tasks : []
+            }
+        }
+
+        try {
+            var poolConnection = await sql.connect(config);
+
+            var resultSet = await poolConnection.request().query(`SELECT * FROM TASKS WHERE PARENT_BOARD = ${boardId};`);
+
+            console.log(`${resultSet.recordset.length} rows returned.`);
+
+            console.log(resultSet.recordset);
+
+            poolConnection.close();
+
+        } catch (err) {
+            console.error(err.message);
+            return {
+                success: false,
+                message: "Error getting tasks",
+                tasks : []
+            }
+        }
+
+        return {
+            success: true,
+            message: "Tasks retrieved successfully",
+            tasks: resultSet.recordset
+        }
+    },
 
 }
