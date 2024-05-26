@@ -134,6 +134,18 @@ app.post('/api/createTask', async (req, res) => {
 
 });
 
+app.post('/api/changeTaskStatus', async (req, res) => {
+    const taskId = req.body.taskId;
+    const status = req.body.status;
+
+    console.log(taskId);
+    console.log(status);
+
+    const result = await utils.changeTaskStatus(taskId, status);
+
+    res.send(result);
+})
+
 
     
     

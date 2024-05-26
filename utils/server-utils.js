@@ -315,4 +315,37 @@ module.exports = {
         }
     },
 
+    changeTaskStatus: async function (taskId, status) {
+        try {
+            var poolConnection = await sql.connect(config);
+
+            // check if task exists
+            var resultSet = await poolConnection.request().query(`SELECT * FROM TASKS WHERE TASK_ID = ${taskId};`);
+            if (resultSet.recordset.length === 0) {
+                console.log("Task does not exist");
+                return {
+                    success: false,
+                    message: "Task does not exist"
+                }
+            }
+
+            // update task
+            await poolConnection.request().query(`UPDATE TASKS SET STATUS = '${status}' WHERE TASK_ID = ${taskId};`);
+
+            poolConnection.close();
+        } catch (err) {
+            console.error(err.message);
+            return {
+                success: false,
+                message: "Error updating task"
+            }
+        }
+
+        console.log("Task updated successfully");
+        return {
+            success: true,
+            message: "Task updated successfully"
+        }
+    },
+
 }
